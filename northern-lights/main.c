@@ -63,9 +63,9 @@ int main(void)
 	volatile uint16_t *pixbuf = (volatile uint16_t *)0x40020004;
 
 	/* Pick some constants */
-	unsigned int rscale = 7;
-	unsigned int gscale = 11;
-	unsigned int bscale = 17;
+	unsigned int rscale = 17;
+	unsigned int gscale = 19;
+	unsigned int bscale = 29;
 
 	unsigned int rstart = 555;
 	unsigned int gstart = 666;
@@ -94,14 +94,14 @@ int main(void)
 				unsigned int blue  = (fp_sin(fp_sin((xbval) >> 4)) * fp_sin(fp_sin((ybval) >> 4))) >> 8;
 				pixbuf[x + y * DISPLAY_HWIDTH] = ((red & 0xF8) << 8) + ((green & 0xFC) << 3) + ((blue & 0xF8) >> 3);
 
-				yrval += rscale;
-				ygval += gscale;
-				ybval += bscale;
+				yrval += (rscale * 2);
+				ygval -= (gscale * 2);
+				ybval += (bscale * 2);
 			}
 
 			xrval += rscale;
 			xgval += gscale;
-			xbval += bscale;
+			xbval -= bscale;
 		}
 
 		/* Increment the animation */
