@@ -62,9 +62,9 @@ int main(void)
 	volatile uint16_t *pixbuf = (volatile uint16_t *)0x40020004;
 
 	/* Pick some constants */
-	unsigned int rscale = 100;
-	unsigned int gscale = 200;
-	unsigned int bscale = 50;
+	unsigned int rscale = 1;
+	unsigned int gscale = 2;
+	unsigned int bscale = 5;
 
 	unsigned int rstart = 555;
 	unsigned int gstart = 666;
@@ -81,12 +81,17 @@ int main(void)
 		/* Redraw the frame */
 		for (x = 0; x < DISPLAY_HRES; x++) {
 			for (y = 0; y < DISPLAY_VRES; y++) {
-				uint8_t red = (fp_sin(rstart + x*rscale) * fp_sin(rstart + y*rscale)) >> 7;
-				uint8_t green = (fp_sin(gstart + x*gscale) * fp_sin(gstart + y*gscale)) >> 7;
-				uint8_t blue = (fp_sin(bstart + x*bscale) * fp_sin(bstart + y*bscale)) >> 7;
+				uint8_t red = (fp_sin((rstart + x*rscale) >> 4) * fp_sin((rstart + y*rscale) >> 4)) >> 7;
+				uint8_t green = (fp_sin((gstart + x*gscale) >> 4) * fp_sin((gstart + y*gscale) >> 4)) >> 7;
+				uint8_t blue = (fp_sin((bstart + x*bscale) >> 4) * fp_sin((bstart + y*bscale) >> 4)) >> 7;
 				pixbuf[x + y * DISPLAY_HWIDTH] = ((red & 0x1F) << 11) + ((green & 0x3F) << 5) + (blue & 0x1F);
 			}
 		}
+
+		/* Increment the animation */
+		rstart += 11;
+		gstart += 7;
+		bstart += 5;
 
 		/* Wait for a bit */
 		delay();
