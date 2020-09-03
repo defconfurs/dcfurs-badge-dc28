@@ -10,12 +10,14 @@
  *=====================================
  */
 struct bios_vtable {
+    void (*bios_bootload)(int slot);
     int (*bios_printf)(const char *fmt, ...);
     int (*bios_vprintf)(const char *fmt, va_list);
 };
 #define VTABLE ((const struct bios_vtable *)0x00000010)
 
 /* TODO: Would some __builtin_apply() magic be better than macros? */
+#define bootload(_slot_) VTABLE->bios_bootload(_slot_)
 #define printf(...) VTABLE->bios_printf(__VA_ARGS__)
 #define vprintf(...) VTABLE->bios_vprintf(__VA_ARGS__)
 

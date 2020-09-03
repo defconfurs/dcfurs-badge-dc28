@@ -10,7 +10,7 @@ ENTRY(entry)
 
 SECTIONS
 {
-    /* Place program code directly into SRAM */
+    /* Place program code directly into SPRAM */
     .text : {
         . = ALIGN(4);
         _stext = .;
