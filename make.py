@@ -117,6 +117,10 @@ def build(*args, imageFile):
                   '-B', 'riscv',
                   'frames.bin', 'frames.o'], cwd=firmwareDir)
 
+            framesObjFile = os.path.join(firmwareDir, 'frames.o')
+            if not framesObjFile in objFiles:
+                objFiles += [framesObjFile]
+            
             print(call([objdump, '-t', 'frames.o'], cwd=firmwareDir))
             
         if call([gcc] + LDFLAGS + ['-o', elfFile] + objFiles) != 0:

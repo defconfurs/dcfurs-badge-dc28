@@ -89,6 +89,9 @@ void main(void) {
     int frame_countdown = 1000;
     int framenum = 0;
 
+    //printf("starting rainbow-grin\n\r");
+    while (MISC->button != 3) asm volatile("nop");
+    
     // And finally - the main loop.
     while (1) {
         if (frame_countdown-- == 0) {
@@ -108,7 +111,7 @@ void main(void) {
             for (delay_count = 0; delay_count < 1000; delay_count++) asm volatile("nop");
             if      (MISC->button == 2 && ANIM_NUM > 0)   ANIM_NUM--;
             else if (MISC->button == 1 && ANIM_NUM < 100) ANIM_NUM++;
-            printf("moving to animation: %d\n\r", ANIM_NUM);
+            //printf("moving to animation: %d\n\r", ANIM_NUM);
             bootload(ANIM_NUM);
         }
     }

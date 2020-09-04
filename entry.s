@@ -11,11 +11,15 @@
 .global _heap_start
 .global _stack_start
 .global _start
+.global main
 
 entry:
+    la x2, _stack_start
+    j setup_crt
+    
+setup_crt:
     # initialize the register file
     addi x1, zero, 0
-    la x2, _stack_start
     addi x3, zero, 0
     addi x4, zero, 0
     addi x5, zero, 0

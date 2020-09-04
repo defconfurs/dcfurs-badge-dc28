@@ -1,7 +1,7 @@
 MEMORY
 {
     ROM   (rx)  : ORIGIN = 0x00000000, LENGTH = 0x01000  /* 4kB */
-    STACK (rw)  : ORIGIN = 0x10000000, LENGTH = 0x01000  /* 4kB */ 
+    STACK (rwx) : ORIGIN = 0x10000000, LENGTH = 0x01000  /* 4kB */ 
     SPRAM (rwx) : ORIGIN = 0x20000000, LENGTH = 0x10000  /* 64kB */
     FLASH (rwx) : ORIGIN = 0x30000000, LENGTH = 0x800000 /* 8MB */
 }
@@ -39,6 +39,7 @@ SECTIONS
         *(.sbss)            /* .bss sections (zero-initialied variables) */
         *(.sbss*)           /* .bss sections (zero-initialied variables) */
         *(COMMON)
+        . = ALIGN(4);
         _ebss = .;
 
         . = ALIGN(4);
