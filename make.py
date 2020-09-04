@@ -40,6 +40,7 @@ if os.name=='nt':
     # Tools used in the flow
     gcc           = os.path.join(platformio, 'toolchain-riscv\\bin\\riscv64-unknown-elf-gcc.exe')
     objcopy       = os.path.join(platformio, 'toolchain-riscv\\bin\\riscv64-unknown-elf-objcopy.exe')
+    objdump       = os.path.join(platformio, 'toolchain-riscv\\bin\\riscv64-unknown-elf-objdump.exe')
     
 else:
     pio_rel = '.platformio/packages/'
@@ -108,11 +109,21 @@ def build(*args, imageFile):
         objFiles += glob(os.path.join(firmwareDir, '*.o'))
         print('------------------------------')
         print(objFiles)
-        
+
+        makeFrames = os.path.join(firmwareDir, 'make_frames.py')
+        if os.path.exists(makeFrames):
+            call(["python3", makeFrames], cwd=firmwareDir)
+            call([objcopy, '-I', 'binary', '-O', 'elf32-littleriscv',
+                  '-B', 'riscv',
+                  'frames.bin', 'frames.o'], cwd=firmwareDir)
+
+            print(call([objdump, '-t', 'frames.o'], cwd=firmwareDir))
+            
         if call([gcc] + LDFLAGS + ['-o', elfFile] + objFiles) != 0:
             print("---- Error compiling ----")
             return
 
+        
         binFile = os.path.join(firmwareDir, 'anim.bin')
         if call([objcopy, '-O', 'binary', elfFile, binFile]) != 0:
             print("---- Error on objcopy ----")
@@ -134,7 +145,8 @@ def build(*args, imageFile):
                     wordCount += 1
         # put a marker in the file to show that this is
         # an invalid entry
-        outFile.write(b"\xFF\xFF\xFF\xFF")
+        for i in range(256):
+            outFile.write(b"\xFF\xFF\xFF\xFF")
 
 
 #######################################
@@ -171,7 +183,7 @@ def main():
             build(*firmwareFiles, imageFile=imageFile)
 
         elif command == 'upload':
-            if call(['dfu-util', '-e', '-a0', '-D', name+'.bin', '-R']) != 0:
+            if call(['dfu-util', '-e', '-a1', '-D', imageFile, '-R']) != 0:
                 return
         
         elif command == 'clean':

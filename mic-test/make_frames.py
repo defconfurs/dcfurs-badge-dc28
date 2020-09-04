@@ -49,5 +49,5 @@ def save_bin(frames, filename):
         f.write(output)
 
 frames = load_file("frames.json")
-save_bin(frames, "test_out.bin")
+save_bin(frames, "frames.bin")
 

@@ -32,6 +32,8 @@ static void update_frame_audio(int average, int peak) {
     *(uint16_t*)(0x40020000) = address & 0x7FFF;
 }    
 
+extern uint32_t *_binary_frames_bin_start;
+extern uint32_t *_binary_frames_bin_end;
 
 void main(void)
 {
@@ -41,8 +43,12 @@ void main(void)
     int audio_average;
     int long_average;
 
+    printf("Starting mic-test\n\r");
+    
     // TODO: need to update this for the proper location
-    memcpy((uint32_t*)(0x40020004), (uint32_t*)(0x30100000), 0xFFF0);
+    memcpy((uint32_t*)(0x40020004), (void*)(_binary_frames_bin_start), _binary_frames_bin_end - _binary_frames_bin_start);
+
+    printf("copied frames\n\r");
 
     // And finally - the main loop.
     while (1) {
@@ -70,6 +76,13 @@ void main(void)
             }
         }
 
-        if (MISC->button != 3) return;
+        if (MISC->button != 3) {
+            int delay_count;
+            for (delay_count = 0; delay_count < 1000; delay_count++) asm volatile("nop");
+            if      (MISC->button == 2 && ANIM_NUM > 0)   ANIM_NUM--;
+            else if (MISC->button == 1 && ANIM_NUM < 100) ANIM_NUM++;
+            printf("moving to animation: %d\n\r", ANIM_NUM);
+            bootload(ANIM_NUM);
+        }
     }
 }

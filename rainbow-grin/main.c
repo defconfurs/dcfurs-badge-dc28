@@ -103,6 +103,13 @@ void main(void) {
             _putchar(ch);
         }
 
-        if (MISC->button != 3) return;
+        if (MISC->button != 3) {
+            int delay_count;
+            for (delay_count = 0; delay_count < 1000; delay_count++) asm volatile("nop");
+            if      (MISC->button == 2 && ANIM_NUM > 0)   ANIM_NUM--;
+            else if (MISC->button == 1 && ANIM_NUM < 100) ANIM_NUM++;
+            printf("moving to animation: %d\n\r", ANIM_NUM);
+            bootload(ANIM_NUM);
+        }
     }
 }
