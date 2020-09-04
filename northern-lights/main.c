@@ -47,71 +47,73 @@ const uint8_t sin_table[256] = {
 
 static uint8_t fp_sin(unsigned int val)
 {
-	return sin_table[val & 0xff];
+    return sin_table[val & 0xff];
 }
 
 static void delay(void)
 {
-	int i;
-	for (i = 0; i < 100000; i++) {
-		asm volatile("nop");
-	}
+    int i;
+    for (i = 0; i < 100000; i++) {
+        asm volatile("nop");
+    }
 }
 
-int main(void)
+void main(void)
 {
-	volatile uint16_t *pixbuf = (volatile uint16_t *)0x40020004;
+    volatile uint16_t *pixbuf = (volatile uint16_t *)0x40020004;
 
-	/* Pick some constants */
-	unsigned int rscale = 17;
-	unsigned int gscale = 19;
-	unsigned int bscale = 29;
+    /* Pick some constants */
+    unsigned int rscale = 17;
+    unsigned int gscale = 19;
+    unsigned int bscale = 29;
 
-	unsigned int rstart = 555;
-	unsigned int gstart = 666;
-	unsigned int bstart = 777;
+    unsigned int rstart = 555;
+    unsigned int gstart = 666;
+    unsigned int bstart = 777;
 
-	int x, y;
+    int x, y;
 
-	printf("Starting Northern Lights\n");
+    printf("Starting Northern Lights\n");
 
-	/* Set the display pointer */
-	DISPLAY_POINTER = 0x40020004;
+    /* Set the display pointer */
+    DISPLAY_POINTER = 0x40020004;
 
-	do {
-		/* Redraw the frame */
-		unsigned int xrval = rstart;
-		unsigned int xgval = gstart;
-		unsigned int xbval = bstart;
-		for (x = 0; x < DISPLAY_HRES; x++) {
-			unsigned int yrval = rstart;
-			unsigned int ygval = gstart;
-			unsigned int ybval = bstart;
+    do {
+        /* Redraw the frame */
+        unsigned int xrval = rstart;
+        unsigned int xgval = gstart;
+        unsigned int xbval = bstart;
+        for (x = 0; x < DISPLAY_HRES; x++) {
+            unsigned int yrval = rstart;
+            unsigned int ygval = gstart;
+            unsigned int ybval = bstart;
 
-			for (y = 0; y < DISPLAY_VRES; y++) {
-				unsigned int red   = (fp_sin(fp_sin((xrval) >> 4)) * fp_sin(fp_sin((yrval) >> 4))) >> 8;
-				unsigned int green = (fp_sin(fp_sin((xgval) >> 4)) * fp_sin(fp_sin((ygval) >> 4))) >> 8;
-				unsigned int blue  = (fp_sin(fp_sin((xbval) >> 4)) * fp_sin(fp_sin((ybval) >> 4))) >> 8;
-				pixbuf[x + y * DISPLAY_HWIDTH] = ((red & 0xF8) << 8) + ((green & 0xFC) << 3) + ((blue & 0xF8) >> 3);
+            for (y = 0; y < DISPLAY_VRES; y++) {
+                unsigned int red   = (fp_sin(fp_sin((xrval) >> 4)) * fp_sin(fp_sin((yrval) >> 4))) >> 8;
+                unsigned int green = (fp_sin(fp_sin((xgval) >> 4)) * fp_sin(fp_sin((ygval) >> 4))) >> 8;
+                unsigned int blue  = (fp_sin(fp_sin((xbval) >> 4)) * fp_sin(fp_sin((ybval) >> 4))) >> 8;
+                pixbuf[x + y * DISPLAY_HWIDTH] = ((red & 0xF8) << 8) + ((green & 0xFC) << 3) + ((blue & 0xF8) >> 3);
 
-				yrval += (rscale * 2);
-				ygval -= (gscale * 2);
-				ybval += (bscale * 2);
-			}
+                yrval += (rscale * 2);
+                ygval -= (gscale * 2);
+                ybval += (bscale * 2);
+            }
 
-			xrval += rscale;
-			xgval += gscale;
-			xbval -= bscale;
-		}
+            xrval += rscale;
+            xgval += gscale;
+            xbval -= bscale;
+        }
 
-		/* Increment the animation */
-		rstart += 29;
-		gstart += 23;
-		bstart += 19;
+        /* Increment the animation */
+        rstart += 29;
+        gstart += 23;
+        bstart += 19;
 
-		/* Wait for a bit */
-		delay();
-	} while(1);
+        /* Wait for a bit */
+        delay();
 
-	return 1;
+        if (MISC->button != 3) return;
+    } while(1);
+
+    return 1;
 }

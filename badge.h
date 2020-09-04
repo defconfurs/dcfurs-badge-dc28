@@ -22,6 +22,12 @@ struct bios_vtable {
 #define vprintf(...) VTABLE->bios_vprintf(__VA_ARGS__)
 
 /*=====================================
+ * Animation Number
+ *=====================================
+ */
+#define ANIM_NUM (*(volatile uint32_t *)0x10000FFC)
+
+/*=====================================
  * Miscellaneous Peripherals
  *=====================================
  */
@@ -36,15 +42,14 @@ struct misc_regs {
  * USB/Serial UART
  *=====================================
  */
-typedef uint32_t serial_reg_t;
-struct serial_regs {
+struct serial_regmap {
     union {
-        serial_reg_t thr;   // Transmit Holding Register.
-        serial_reg_t rhr;   // Receive Holding Register.
+        uint32_t thr;   // Transmit Holding Register.
+        uint32_t rhr;   // Receive Holding Register.
     };
-    serial_reg_t ier;   // Interrupt Enable Register.
-    serial_reg_t isr;   // Interrupt Status Register.
-};
+    uint32_t ier;   // Interrupt Enable Register.
+    uint32_t isr;   // Interrupt Status Register.
+} __attribute__((packed));
 #define SERIAL ((volatile struct serial_regmap *)0x40010000)
 #define SERIAL_INT_DATA_READY   0x01
 #define SERIAL_INT_THR_EMPTY    0x02

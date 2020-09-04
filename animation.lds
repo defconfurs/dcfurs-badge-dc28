@@ -46,5 +46,5 @@ SECTIONS
     } > SPRAM
 
     /* Initial stack should start at the end of SRAM. */
-    _stack_start = ORIGIN(STACK) + LENGTH(STACK) - 4;
+    _stack_start = ORIGIN(STACK) + LENGTH(STACK) - 8; /* added word at end for animation number */
 }
