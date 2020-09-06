@@ -11,6 +11,7 @@
  */
 struct bios_vtable {
     void (*bios_bootload)(int slot);
+    void (*bios_bootexit)(int code);
     int (*bios_printf)(const char *fmt, ...);
     int (*bios_vprintf)(const char *fmt, va_list);
 };
@@ -22,12 +23,6 @@ struct bios_vtable {
 #define vprintf(...) VTABLE->bios_vprintf(__VA_ARGS__)
 
 /*=====================================
- * Animation Number
- *=====================================
- */
-#define ANIM_NUM (*(volatile uint32_t *)0x10000FFC)
-
-/*=====================================
  * Miscellaneous Peripherals
  *=====================================
  */
@@ -35,6 +30,8 @@ struct misc_regs {
     uint32_t leds[3];   /* Status LED PWM intensity: Red, Green and Blue */
     uint32_t button;    /* Button Status */
     uint32_t mic;       /* Microphone Data */
+    uint32_t i_enable;  /* Interrupt Enable */
+    uint32_t i_status;  /* Interrupt Status */ 
 };
 #define MISC ((volatile struct misc_regs *)0x40000000)
 
@@ -65,5 +62,32 @@ struct serial_regmap {
 #define DISPLAY_HWIDTH  32  /* Number of total pixels per row */
 #define DISPLAY_POINTER (*(volatile uint32_t *)0x40020000)
 #define DISPLAY_MEMORY  ((volatile void *)0x40020000)
+
+struct framebuf {
+    uint16_t data[DISPLAY_HWIDTH * DISPLAY_VRES];
+};
+
+struct framebuf *framebuf_alloc(void);
+void framebuf_free(struct framebuf *frame);
+void framebuf_render(struct framebuf *fframe);
+
+/*=====================================
+ * Animation Header Structure
+ *=====================================
+ */
+#define BOOT_HDR_TAG    0xDEADBEEF
+
+struct boot_header {
+    uint32_t tag;   /* Must match BOOT_HDR_TAG to be a valid image. */
+    uint32_t flags; /* Reserved for future use. */
+    uint32_t entry; /* Program entry point address */
+    uint32_t data_size;  /* Size of data to load into memory. */
+    /* The following are reserved for future use. */
+    uint32_t data_start;
+    uint32_t frame_size;
+    uint32_t frame_start;
+    uint32_t name_size;
+    uint8_t  name[32];
+};
 
 #endif /* _BADGE_H */

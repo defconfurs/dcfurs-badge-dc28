@@ -72,7 +72,7 @@ static void delay(void)
 
 void main(void)
 {
-    volatile uint16_t *pixbuf = (volatile uint16_t *)0x40020004;
+    struct framebuf *frame;
 
     /* Pick some constants */
     unsigned int rscale = 17;
@@ -85,13 +85,12 @@ void main(void)
 
     int x, y;
 
-    //printf("Starting Northern Lights\n");
-    while (MISC->button != 3) asm volatile("nop");
+    printf("Starting Northern Lights\n");
+    //while (MISC->button != 3) asm volatile("nop");
             
+    /* Allocate a frame buffer */
+    frame = framebuf_alloc();
     
-    /* Set the display pointer */
-    DISPLAY_POINTER = 0x40020004;
-
     do {
         /* Redraw the frame */
         unsigned int xrval = rstart;
@@ -106,7 +105,7 @@ void main(void)
                 unsigned int red   = (fp_sin(fp_sin((xrval) >> 4)) * fp_sin(fp_sin((yrval) >> 4))) >> 8;
                 unsigned int green = (fp_sin(fp_sin((xgval) >> 4)) * fp_sin(fp_sin((ygval) >> 4))) >> 8;
                 unsigned int blue  = (fp_sin(fp_sin((xbval) >> 4)) * fp_sin(fp_sin((ybval) >> 4))) >> 8;
-                pixbuf[x + y * DISPLAY_HWIDTH] = ((red & 0xF8) << 8) + ((green & 0xFC) << 3) + ((blue & 0xF8) >> 3);
+                frame->data[x + y * DISPLAY_HWIDTH] = ((red & 0xF8) << 8) + ((green & 0xFC) << 3) + ((blue & 0xF8) >> 3);
 
                 yrval += (rscale * 2);
                 ygval -= (gscale * 2);
@@ -117,33 +116,15 @@ void main(void)
             xgval += gscale;
             xbval -= bscale;
         }
+        framebuf_render(frame);
 
         /* Increment the animation */
         rstart += 29;
         gstart += 23;
         bstart += 19;
 
-        if (SERIAL->isr & 0x01) {
-            uint8_t ch = SERIAL->rhr;
-
-            _putchar(ch);
-
-            if (ch == 0x20) {
-                printf("%d\n\r", ANIM_NUM);
-            }
-        }
-        
         /* Wait for a bit */
         delay();
-
-        if (MISC->button != 3) {
-            int delay_count;
-            for (delay_count = 0; delay_count < 1000; delay_count++) asm volatile("nop");
-            if      (MISC->button == 2 && ANIM_NUM > 0)   ANIM_NUM--;
-            else if (MISC->button == 1 && ANIM_NUM < 100) ANIM_NUM++;
-            //printf("moving to animation: %d\n\r", ANIM_NUM);
-            bootload(ANIM_NUM);
-        }
     } while(1);
 
     return;

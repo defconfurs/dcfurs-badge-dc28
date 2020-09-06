@@ -50,9 +50,6 @@ void main(void)
 
     memcpy((void*)0x40020004, (const void*)&_binary_frames_bin_start, (int)&_binary_frames_bin_size);
 
-    //printf("copied frames\n\r");
-    while (MISC->button != 3) asm volatile("nop");
-
     // And finally - the main loop.
     while (1) {
         audio_average = audio_average - (audio_average>>4) + *(int32_t*)(0x40000010);
@@ -77,15 +74,6 @@ void main(void)
             if (ch == 0x20) {
                 printf("%d - %d\n\r", audio_abs, peak);
             }
-        }
-
-        if (MISC->button != 3) {
-            int delay_count;
-            for (delay_count = 0; delay_count < 1000; delay_count++) asm volatile("nop");
-            if      (MISC->button == 2 && ANIM_NUM > 0)   ANIM_NUM--;
-            else if (MISC->button == 1 && ANIM_NUM < 100) ANIM_NUM++;
-            //printf("moving to animation: %d\n\r", ANIM_NUM);
-            bootload(ANIM_NUM);
         }
     }
 }
