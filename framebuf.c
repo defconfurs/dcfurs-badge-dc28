@@ -55,7 +55,7 @@ framebuf_free(struct framebuf *frame)
 
 /* Display a frame buffer */
 void
-framebuf_render(struct framebuf *frame)
+framebuf_render(const struct framebuf *frame)
 {
     /* TODO: Sanity-check that the frame points into display memory? */
     framebuf_display_pointer = (uintptr_t)frame & 0xFFFF;

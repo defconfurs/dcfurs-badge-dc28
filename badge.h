@@ -40,18 +40,17 @@ struct misc_regs {
  *=====================================
  */
 struct serial_regmap {
-    union {
-        uint32_t thr;   // Transmit Holding Register.
-        uint32_t rhr;   // Receive Holding Register.
-    };
-    uint32_t ier;   // Interrupt Enable Register.
-    uint32_t isr;   // Interrupt Status Register.
+    uint32_t rxfifo;    /* Receive Holding Register. */
+    uint32_t txfifo;    /* Transmit Holding Register. */
+    uint32_t ier;       /* Interrupt Enable Register. */
+    uint32_t isr;       /* Interrupt Status Register. */
 } __attribute__((packed));
 #define SERIAL ((volatile struct serial_regmap *)0x40010000)
-#define SERIAL_INT_DATA_READY   0x01
-#define SERIAL_INT_THR_EMPTY    0x02
-#define SERIAL_INT_RECVR_LINE   0x04
-#define SERIAL_INT_MODEM_STATUS 0x08
+
+#define SERIAL_INT_RXDATA_READY 0x01    /* One or more bytes are ready in the RXFIFO */
+#define SERIAL_INT_TXFIFO_EMPTY 0x02    /* The TXFIFO is empty */
+#define SERIAL_INT_DTR_ACTIVE   0x04    /* Data Terminal Ready signal is active */
+#define SERIAL_INT_RTS_ACTIVE   0x08    /* Ready to Send signal is active */
 
 /*=====================================
  * Display Memory
@@ -69,7 +68,7 @@ struct framebuf {
 
 struct framebuf *framebuf_alloc(void);
 void framebuf_free(struct framebuf *frame);
-void framebuf_render(struct framebuf *fframe);
+void framebuf_render(const struct framebuf *frame);
 
 /*=====================================
  * Animation Header Structure
@@ -81,8 +80,8 @@ struct boot_header {
     uint32_t tag;   /* Must match BOOT_HDR_TAG to be a valid image. */
     uint32_t flags; /* Reserved for future use. */
     uint32_t entry; /* Program entry point address */
-    uint32_t data_size;  /* Size of data to load into memory. */
-    /* The following are reserved for future use. */
+    /* Program Section Headers */
+    uint32_t data_size;
     uint32_t data_start;
     uint32_t frame_size;
     uint32_t frame_start;

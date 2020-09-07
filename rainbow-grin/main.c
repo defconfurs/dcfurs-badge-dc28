@@ -10,8 +10,8 @@ void _putchar(char ch)
     prev = ch;
 
     /* Output the character */
-    while ((SERIAL->isr & 0x02) == 0) { /* nop */}
-    SERIAL->thr = ch;
+    while ((SERIAL->isr & SERIAL_INT_TXFIFO_EMPTY) == 0) { /* nop */}
+    SERIAL->txfifo = ch;
 }
 
 //    static const uint32_t bitmap[] = {
@@ -34,21 +34,33 @@ void _putchar(char ch)
 //    };
 
 
-static void update_frame(int framenum) {
-    int x, y;
-    int address;
+static void
+update_frame(int framenum)
+{
+    static int init = 0;
+    static struct framebuf *frames[2];
+    
+    struct framebuf *address;
+    int x, y, ystart;
     int offset;
+
+    /* Allocate some frames */
+    if (!init) {
+        frames[0] = framebuf_alloc();
+        frames[1] = framebuf_alloc();
+        init = 1;
+    }
 
     offset = framenum >> 2;
 
     static const uint16_t colours[] = {
-        0xF800,
-        0xF300,
-        0xF5E0,
-        0x07C0,
-        0x001F,
-        0x7817,
-        0xFFFF
+        0xF800, /* Red */
+        0xF300, /* Orange */
+        0xF5E0, /* Yellow */
+        0x07C0, /* Green */
+        0x001F, /* Blue */
+        0x7817, /* Purple */
+        0xFFFF  /* White */
     };
 
     static const uint32_t bitmap[] = {
@@ -70,19 +82,19 @@ static void update_frame(int framenum) {
         0b00000000000000000000111111111111,
     };
         
-    
-    if (framenum & 1) address = 0x40020004;
-    else              address = 0x40020404;
-    
+    address = frames[framenum & 1];
+
+    ystart = 0;
     for (y = 0; y < 14; y++) {
         for (x = 0; x < 10; x++) {
-            if (bitmap[y] & (0x80000000 >> x)) *(uint16_t*)(address + ((  x )<<1) + (y<<6)) = colours[(offset + (x>>1) + (y>>1)) % 6];
-            else                               *(uint16_t*)(address + ((  x )<<1) + (y<<6)) = 0;
-            if (bitmap[y] & (0x00001000 << x)) *(uint16_t*)(address + ((19-x)<<1) + (y<<6)) = colours[(offset + (x>>1) + (y>>1)) % 6];
-            else                               *(uint16_t*)(address + ((19-x)<<1) + (y<<6)) = 0;
+            if (bitmap[y] & (0x80000000 >> x)) address->data[x + ystart] = colours[(offset + (x>>1) + (y>>1)) % 6];
+            else                               address->data[x + ystart] = 0;
+            if (bitmap[y] & (0x00001000 << x)) address->data[19 - x + ystart] = colours[(offset + (x>>1) + (y>>1)) % 6];
+            else                               address->data[19 - x + ystart] = 0;
         }
+        ystart += DISPLAY_HWIDTH;
     }
-    *(uint16_t*)(0x40020000) = address & 0x7FFF;
+    framebuf_render(address);
 }
 
 void main(void) {
@@ -97,8 +109,8 @@ void main(void) {
             update_frame(framenum++);
         }
 
-        if (SERIAL->isr & 0x01) {
-            uint8_t ch = SERIAL->rhr;
+        if (SERIAL->isr & SERIAL_INT_RXDATA_READY) {
+            uint8_t ch = SERIAL->rxfifo;
 
             _putchar(ch);
         }
