@@ -1,3 +1,4 @@
+#include <errno.h>
 #include "badge.h"
 
 void __attribute__((noreturn))
@@ -5,6 +6,24 @@ _exit(int code)
 {
     VTABLE->bios_bootexit(code);
     while (1) { /* nop*/ }
+}
+
+/* Support a heap, if someone really wants to use it */
+extern char _heap_start;
+extern char _heap_end;
+static char *_sbrk_top = &_heap_start;
+void *
+_sbrk(intptr_t diff)
+{
+    char *sbrk_prev = _sbrk_top;
+    char *sbrk_next = _sbrk_top + diff;
+
+    if ((sbrk_next > &_heap_end) || (sbrk_next < &_heap_start)) {
+        errno = ENOMEM;
+        return (void *)-1;
+    }
+    _sbrk_top = sbrk_next;
+    return sbrk_prev;
 }
 
 /* Animation Header Structure */

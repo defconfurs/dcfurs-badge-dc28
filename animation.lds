@@ -62,6 +62,10 @@ SECTIONS
         _end = .;
     } > SPRAM
 
+    /* Generate symbols for the heap */
+    _heap_start = _ebss;
+    _heap_end = ORIGIN(SPRAM) + LENGTH(SPRAM);
+
     /* Generate the size of relocated program data. */
     _rel_data_offset = _rel_start - ORIGIN(FLASH);
     _rel_data_length = _edata - ORIGIN(SPRAM);

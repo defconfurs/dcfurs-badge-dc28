@@ -52,13 +52,6 @@ void main(void)
     int long_average;
 
     printf("Starting Mic Test\n");
-    printf("voice_0_png is at 0x%08x\n", (uintptr_t)&voice_0_png);
-    for (int i = 0; i < 14; i++) {
-        for (int j = 0; j < 20; j++) {
-            printf(" %04x", voice_0_png.data[i * 14 + j]);
-        }
-        printf("\n");
-    }
 
     // And finally - the main loop.
     while (1) {
