@@ -176,6 +176,9 @@ def build(name):
     if subprocess.call([gcc] + LDFLAGS + ['-o', elf_target] + objects, stderr=subprocess.STDOUT) != 0:
         return
 
+    #if subprocess.call([objdump, '-x', elf_target], stderr=subprocess.STDOUT) != 0:
+    #    pass
+
     # Convert to a binary file.
     print("   Packing   [" + os.path.basename(bin_target) + "]")
     if subprocess.call([objcopy, '-O', 'binary', elf_target, bin_target], stderr=subprocess.STDOUT) != 0:
