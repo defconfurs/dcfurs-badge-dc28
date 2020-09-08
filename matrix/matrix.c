@@ -1,15 +1,11 @@
 #include <stdint.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/time.h>
+#include <unistd.h>
+#include <stdatomic.h>
 #include "badge.h"
-
-static void delay(void)
-{
-    int i;
-    for (i = 0; i < 200000; i++) {
-        asm volatile("nop");
-    }
-}
 
 static const uint16_t colours[8] = {
     0xF800, /* Red */
@@ -29,8 +25,6 @@ void main(void)
     int counter = 0;
     uint8_t state[DISPLAY_HRES][DISPLAY_VRES];
 
-    printf("Take the Blue Pill?\n");
-
     /* Seed the PRNG */
     register uint32_t seed;
     asm volatile ("csrr %0, mcycle" : "=r"(seed));
@@ -43,7 +37,7 @@ void main(void)
     frames[1] = framebuf_alloc();
     memset(state, 0, sizeof(state));
 
-    for (counter = 0; ; counter++) {
+    for (counter = 0;; counter++) {
         int x, y;
 
         /* Move each pixel down a row and decay. */
@@ -87,6 +81,6 @@ void main(void)
         framebuf_render(buf);
 
         /* Wait for some time */
-        delay();
+        usleep(200000);
     }
 }

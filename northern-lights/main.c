@@ -1,5 +1,6 @@
 #include <stdint.h>
 #include <stdio.h>
+#include <unistd.h>
 #include "badge.h"
 
 void _putchar(char ch)
@@ -63,14 +64,6 @@ static uint8_t fp_sin(unsigned int val)
     return sin_table[val & 0xff];
 }
 
-static void delay(void)
-{
-    int i;
-    for (i = 0; i < 100000; i++) {
-        asm volatile("nop");
-    }
-}
-
 void main(void)
 {
     struct framebuf *frame;
@@ -123,8 +116,8 @@ void main(void)
         gstart += 23;
         bstart += 19;
 
-        /* Wait for a bit */
-        delay();
+        /* Wait for a bit (125ms) */
+        usleep(125000);
     } while(1);
 
     return;

@@ -13,6 +13,7 @@ ldsfile = os.path.join(srcdir,'animation.lds')
 
 CFLAGS = ['-Os', '-march=rv32ic', '-mabi=ilp32', '-I', srcdir]
 CFLAGS += ['-ffunction-sections', '-fdata-sections', '--specs=nano.specs']
+CFLAGS += ['-D', '_POSIX_TIMERS', '-D', '_POSIX_MONOTONIC_CLOCK=200112L']
 LDFLAGS = CFLAGS + ['-Wl,-Bstatic,-T,'+ldsfile+',--gc-sections']
 
 #######################################
