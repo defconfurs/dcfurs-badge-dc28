@@ -34,9 +34,24 @@ struct misc_regs {
     uint32_t button;    /* Button Status */
     uint32_t mic;       /* Microphone Data */
     uint32_t i_enable;  /* Interrupt Enable */
-    uint32_t i_status;  /* Interrupt Status */ 
+    uint32_t i_status;  /* Interrupt Status */
+    uint32_t __reserved0;
+    /* Hardware Multiply helper - experimental */
+    uint32_t mul_ctrl;      /* DSP multiply control register */
+    uint32_t __reserved1;
+    uint32_t mul_op_a;      /* DSP multiply operand A */
+    uint32_t mul_op_b;      /* DSP multiply operand B */
+    uint32_t mul_accum;     /* DSP multiply operand C */
+    uint32_t mul_xaccum;    /* DSP multiply extended operand C (not implemented) */
+    uint32_t mul_result;    /* DSP multiply result = C +/- (A*B) */
+    uint32_t mul_xresult;   /* DSP multiply extended result (not implemented) */ 
 };
 #define MISC ((volatile struct misc_regs *)0x40000000)
+
+#define MUL_STATUS_CARRY    (1 << 0)    /* Carry output to multiply */
+#define MUL_CONTROL_CARRY   (1 << 4)    /* Carry input to multiply */
+#define MUL_CONTROL_FMADD   (0 << 6)    /* Compute RES = C + (A*B) */
+#define MUL_CONTROL_FMSUB   (1 << 6)    /* Compute RES = C - (A*B) */
 
 /*=====================================
  * USB/Serial UART
@@ -72,6 +87,8 @@ struct framebuf {
 struct framebuf *framebuf_alloc(void);
 void framebuf_free(struct framebuf *frame);
 void framebuf_render(const struct framebuf *frame);
+
+uint16_t hsv2pixel(unsigned int hue, uint8_t sat, uint8_t value);
 
 /*=====================================
  * Animation Header Structure

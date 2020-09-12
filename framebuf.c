@@ -60,3 +60,82 @@ framebuf_render(const struct framebuf *frame)
     /* TODO: Sanity-check that the frame points into display memory? */
     framebuf_display_pointer = (uintptr_t)frame & 0xFFFF;
 }
+
+/* Hopefully the fastest we can convert HSV->RGB */
+static unsigned int
+mod360(unsigned int n)
+{
+    unsigned int q;
+    unsigned int r;
+    unsigned int t;
+
+    q = n - (n >> 2) - (n >> 5) - (n >> 7);
+    q += (q >> 12);
+    q += (q >> 24);
+    q >>= 8;
+
+    t = (q << 6) + (q << 3);
+    r = n - (t << 2) - t;
+    return (r > 359) ? (r - 360) : r;
+}
+
+static unsigned int
+div60(unsigned int n)
+{
+    unsigned int q; /* quotient guess */
+    unsigned int r; /* remainder */
+
+    q = (n >> 1) + (n >> 5);
+    q += (q >> 8);
+    q += (q >> 16);
+    q >>= 5;
+    r = n - (q << 6) + (q << 2);
+    return (r > 59) ? q : q+1;
+}
+
+#define hsv_slope(_val_, _angle_) div60((_val_) * (_angle_))
+
+uint16_t
+hsv2pixel(unsigned int hue, uint8_t sat, uint8_t val)
+{
+    uint8_t r = 0, g = 0, b = 0;
+    uint8_t valsat = (val * sat + 0xff) >> 8;
+    uint8_t white = (val - valsat);
+
+hsv_try_again:
+    if (hue < 60) {
+        r = valsat;
+        g = hsv_slope(valsat, hue);
+        b = white;
+    }
+    else if (hue < 120) {
+        r = hsv_slope(valsat, 120 - hue);
+        g = valsat;
+        b = white;
+    }
+    else if (hue < 180) {
+        r = white;
+        g = valsat;
+        b = hsv_slope(valsat, hue - 120);
+    }
+    else if (hue < 240) {
+        r = white;
+        g = hsv_slope(valsat, 240 - hue);
+        b = valsat;
+    }
+    else if (hue < 300) {
+        r = hsv_slope(valsat, hue - 240);
+        g = white;
+        b = valsat;
+    }
+    else if (hue < 360) {
+        r = valsat;
+        g = white;
+        b = hsv_slope(valsat, 360 - hue);
+    }
+    else {
+        hue = mod360(hue);
+        goto hsv_try_again;
+    }
+    return ((r & 0xF8) << 8) + ((g & 0xFC) << 3) + ((b & 0xF8) >> 3);
+}
