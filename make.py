@@ -8,6 +8,11 @@ from glob import glob
 
 animSize = 65536
 
+animation_order = ['mic-test',
+                   'matrix',
+                   'northern-lights',
+                   'rainbow-grin']
+
 srcdir = os.path.dirname(os.path.abspath(__file__))
 ldsfile = os.path.join(srcdir,'animation.lds')
 
@@ -260,9 +265,14 @@ def main():
 
     # Each subdirectory should contain the sources for a single animation.
     animations = []
-    for x in os.listdir(srcdir):
+    for x in animation_order:
         if os.path.isdir(os.path.join(srcdir, x)) and os.path.basename(x)[0] != '.':
             animations.append(os.path.basename(x))
+    
+    for x in os.listdir(srcdir):
+        if os.path.isdir(os.path.join(srcdir, x)) and os.path.basename(x)[0] != '.':
+            if os.path.basename(x) not in animations:
+                animations.append(os.path.basename(x))
 
     # Run Commands.
     for command in args.command:
