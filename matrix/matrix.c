@@ -4,7 +4,6 @@
 #include <string.h>
 #include <sys/time.h>
 #include <unistd.h>
-#include <stdatomic.h>
 #include "badge.h"
 
 static const uint16_t colours[8] = {

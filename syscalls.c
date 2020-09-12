@@ -19,6 +19,15 @@ clock_rdcycle(void)
 }
 
 int
+gettimeofday(struct timeval *tv, void *tz)
+{
+    unsigned long long cycles = clock_rdcycle();
+    tv->tv_sec = cycles / CORE_CLOCK_FREQUENCY;
+    tv->tv_usec = (cycles % CORE_CLOCK_FREQUENCY) * 1000000 / CORE_CLOCK_FREQUENCY;
+    return 0;
+}
+
+int
 clock_gettime(clockid_t clkid, struct timespec *ts)
 {
     if ((clkid == CLOCK_REALTIME) || (clkid == CLOCK_MONOTONIC)) {
