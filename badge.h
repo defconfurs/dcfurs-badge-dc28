@@ -6,7 +6,7 @@
 #include <stdarg.h>
 
 /* The CPU clock speed */
-#define CORE_CLOCK_FREQUENCY    12000000
+#define CORE_CLOCK_FREQUENCY    16000000
 
 /*=====================================
  * Functions Exported by the BIOS
