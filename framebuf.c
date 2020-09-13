@@ -104,34 +104,34 @@ hsv2pixel(unsigned int hue, uint8_t sat, uint8_t val)
 
 hsv_try_again:
     if (hue < 60) {
-        r = valsat;
-        g = hsv_slope(valsat, hue);
+        r = val;
+        g = white + hsv_slope(valsat, hue);
         b = white;
     }
     else if (hue < 120) {
-        r = hsv_slope(valsat, 120 - hue);
-        g = valsat;
+        r = white + hsv_slope(valsat, 120 - hue);
+        g = val;
         b = white;
     }
     else if (hue < 180) {
         r = white;
-        g = valsat;
-        b = hsv_slope(valsat, hue - 120);
+        g = val;
+        b = white + hsv_slope(valsat, hue - 120);
     }
     else if (hue < 240) {
         r = white;
-        g = hsv_slope(valsat, 240 - hue);
-        b = valsat;
+        g = white + hsv_slope(valsat, 240 - hue);
+        b = val;
     }
     else if (hue < 300) {
-        r = hsv_slope(valsat, hue - 240);
+        r = white + hsv_slope(valsat, hue - 240);
         g = white;
-        b = valsat;
+        b = val;
     }
     else if (hue < 360) {
-        r = valsat;
+        r = val;
         g = white;
-        b = hsv_slope(valsat, 360 - hue);
+        b = white + hsv_slope(valsat, 360 - hue);
     }
     else {
         hue = mod360(hue);

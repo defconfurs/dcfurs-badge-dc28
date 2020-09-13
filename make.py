@@ -8,10 +8,7 @@ from glob import glob
 
 animSize = 65536
 
-animation_order = ['mic-test',
-                   'matrix',
-                   'northern-lights',
-                   'rainbow-grin']
+animation_order = ['lightning-voice']
 
 srcdir = os.path.dirname(os.path.abspath(__file__))
 ldsfile = os.path.join(srcdir,'animation.lds')

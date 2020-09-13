@@ -59,6 +59,7 @@ void main(void)
     //int audio_average = 0;
     int audio = 0;
     uint32_t nexttime = 0;
+    signed int diff;
 
     printf("Starting Mic Test\n");
     
@@ -66,13 +67,11 @@ void main(void)
     while (1) {
         //----------------------------------------------------------------------------------------------
         // try to get some form of deterministic timing... kinda
-        while (rdcycles_32() < nexttime);
+        do { diff = nexttime - rdcycles_32(); } while (diff > 0);
         nexttime = rdcycles_32() + (CORE_CLOCK_FREQUENCY / 8000);
-        // edgecase for the roll-over event so it doesn't miss it (loop must be less than 512 cycles)
-        if (nexttime > 0xFFFFF700) nexttime = 0;
         //----------------------------------------------------------------------------------------------
         
-        audio_abs = *(int32_t*)(0x40000010);
+        audio_abs = MISC->mic;
         if (audio_abs < 0) audio_abs = -audio_abs;
         
         long_average = long_average - (long_average>>5) + audio_abs;
@@ -89,7 +88,7 @@ void main(void)
             update_frame_audio(audio_abs, peak);
         }
         if (frame_countdown % 800 == 0) {
-            printf("%d - %d %d\n\r", audio_abs, peak, *(uint8_t*)(0x4000000C));
+            printf("%d - %d   %d %d\n\r", audio_abs, peak, MISC->button, MISC->i_status);
         }
 
         /* If there are characters received, echo them back. */
