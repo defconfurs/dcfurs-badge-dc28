@@ -91,6 +91,33 @@ _sbrk(intptr_t diff)
     return sbrk_prev;
 }
 
+/*=====================================
+ * Functions Exported by the BIOS
+ *=====================================
+ */
+struct bios_vtable {
+    void (*bios_bootload)(int slot);
+    void (*bios_bootexit)(int code);
+    void (*bios_printf)(const char *fmt, ...);
+    void (*bios_vprintf)(const char *fmt, va_list);
+};
+#define VTABLE ((const struct bios_vtable *)0x00000010)
+
+void __attribute__((weak))
+bios_vprintf(const char *fmt, va_list ap)
+{
+    VTABLE->bios_vprintf(fmt, ap);
+}
+
+void __attribute__((weak))
+bios_printf(const char *fmt, ...)
+{
+    va_list ap;
+    va_start(ap, fmt);
+    bios_vprintf(fmt, ap);
+    va_end(ap);
+}
+
 /* Animation Header Structure */
 extern void _start();
 extern const char _rel_data_offset;

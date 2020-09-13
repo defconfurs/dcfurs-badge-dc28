@@ -8,7 +8,13 @@ from glob import glob
 
 animSize = 65536
 
-animation_order = ['lightning-voice']
+# The list of animations to build.
+animations = ['djmode',
+              'mic-test',
+              'matrix',
+              'northern-lights',
+              'lightning-voice',
+              'rainbow-grin']
 
 srcdir = os.path.dirname(os.path.abspath(__file__))
 ldsfile = os.path.join(srcdir,'animation.lds')
@@ -16,7 +22,6 @@ ldsfile = os.path.join(srcdir,'animation.lds')
 CFLAGS = ['-Os', '-march=rv32i', '-mabi=ilp32', '-I', srcdir]
 CFLAGS += ['-ffunction-sections', '-fdata-sections', '--specs=nano.specs']
 CFLAGS += ['-D', '_POSIX_TIMERS', '-D', '_POSIX_MONOTONIC_CLOCK=200112L']
-LDFLAGS = CFLAGS + ['-Wl,-Bstatic,-T,'+ldsfile+',--gc-sections']
 
 #######################################
 ## Locate Toolchain Paths
@@ -127,6 +132,59 @@ def compile(target, source):
     raise Exception("Unknown file type for " + os.path.pabsename(source))
 
 #######################################
+## Recompile the BIOS
+#######################################
+def buildrom(name):
+    """Rebuild the badge BIOS
+
+    BIOS sources will be found at srcdir/name, where
+    srcdir is the location of the make.py script. Compiled
+    files will be generated in $(pwd)/name, and the output
+    animation file will be at $(pwd)/name/name.bin
+
+    Args:
+       name (string): Name of the bios to be build.
+    """
+    # Assemble the list of sources for this animation.
+    biosdir = os.path.join(srcdir, name)
+    objdir = name
+    sources  = glob(os.path.join(biosdir, '*.c'))
+    sources += glob(os.path.join(biosdir, '*.s'))
+    objects = []
+
+    # Firmware target image(s) should match the dirname.
+    elf_target = os.path.join(objdir, name + '.elf')
+    bin_target = os.path.join(objdir, name + '.bin')
+    print("BIOS [" + os.path.basename(bin_target) + "] ", end='')
+    if not check_rebuild(*sources, ldsfile, target=bin_target):
+        print("is up to date")
+        return
+    else:
+        print("building...")
+    
+    # Create the output directory, if it doesn't already exist.
+    if not os.path.exists(objdir):
+        os.mkdir(objdir)
+    
+    # Rebuild each source into an object file.
+    for srcfile in sources:
+        (root, ext) = os.path.splitext(srcfile)
+        objfile = root + '.o'
+        compile(objfile, srcfile)
+        objects.append(objfile)
+
+    # Link the BIOS together.
+    LDFLAGS = ['-Wl,-Bstatic,-T,%s,--gc-sections' % glob(os.path.join(biosdir, '*.lds'))[0]]
+    print("   Linking   [" + os.path.basename(elf_target) + "]")
+    if subprocess.call([gcc] + CFLAGS + LDFLAGS + ['-o', elf_target] + objects, stderr=subprocess.STDOUT) != 0:
+        return
+
+    # Convert to a binary file.
+    print("   Packing   [" + os.path.basename(bin_target) + "]")
+    if subprocess.call([objcopy, '-O', 'binary', elf_target, bin_target], stderr=subprocess.STDOUT) != 0:
+        return
+
+#######################################
 ## Recompile Animations
 #######################################
 def build(name):
@@ -174,12 +232,10 @@ def build(name):
         objects.append(objfile)
     
     # Link the animation together.
+    LDFLAGS = ['-Wl,-Bstatic,-T,%s,--gc-sections' % ldsfile]
     print("   Linking   [" + os.path.basename(elf_target) + "]")
-    if subprocess.call([gcc] + LDFLAGS + ['-o', elf_target] + objects, stderr=subprocess.STDOUT) != 0:
+    if subprocess.call([gcc] + CFLAGS + LDFLAGS + ['-o', elf_target] + objects, stderr=subprocess.STDOUT) != 0:
         return
-
-    #if subprocess.call([objdump, '-x', elf_target], stderr=subprocess.STDOUT) != 0:
-    #    pass
 
     # Convert to a binary file.
     print("   Packing   [" + os.path.basename(bin_target) + "]")
@@ -260,32 +316,25 @@ def main():
                         help="Make target to run, one of build|clean|package|upload")
     args = parser.parse_args()
 
-    # Each subdirectory should contain the sources for a single animation.
-    animations = []
-    for x in animation_order:
-        if os.path.isdir(os.path.join(srcdir, x)) and os.path.basename(x)[0] != '.':
-            animations.append(os.path.basename(x))
-    
-    for x in os.listdir(srcdir):
-        if os.path.isdir(os.path.join(srcdir, x)) and os.path.basename(x)[0] != '.':
-            if os.path.basename(x) not in animations:
-                animations.append(os.path.basename(x))
-
     # Run Commands.
     for command in args.command:
         if command == 'build':
+            # Build the BIOS
+            buildrom('bios')
+
             # Build individual animations.
             for x in animations:
                 build(x)
             
             # Bundle animations together into a final image.
-            bundle(*[ '%s/%s.bin' % (x, x) for x in animations ], target='animations.bin')
+            bundle('bios/bios.bin', *[ '%s/%s.bin' % (x, x) for x in animations ], target='animations.bin')
 
         elif command == 'upload':
             if subprocess.call(['dfu-util', '-d', '1d50:6130', '-a1', '-D', 'animations.bin', '-R'], stderr=subprocess.STDOUT) != 0:
                 return
         
         elif command == 'clean':
+            clean('bios')
             clean(*animations)
             
         else:
