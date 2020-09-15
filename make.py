@@ -203,6 +203,7 @@ def build(name):
     objdir = name
     sources  = [os.path.join(srcdir, 'syscalls.c')]
     sources += [os.path.join(srcdir, 'framebuf.c')]
+    sources += [os.path.join(srcdir, 'muldiv.c')]
     sources += glob(os.path.join(animdir, '*.c'))
     sources += glob(os.path.join(animdir, '*.s'))
     sources += glob(os.path.join(animdir, '*.png'))
