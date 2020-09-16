@@ -2,6 +2,14 @@
 #include <string.h>
 #include "badge.h"
 
+
+static inline uint32_t rdcycles_32(void)
+{
+    register uint32_t cyc_lo;
+    asm volatile("csrr %[lo],  mcycle" : [lo]"=r"(cyc_lo));
+    return cyc_lo;
+}
+
 void _putchar(char ch)
 {
     /* Cook line endings to play nicely with terminals. */
@@ -34,8 +42,10 @@ void _putchar(char ch)
 //    };
 
 
+static struct framebuf *frames[2];
+
 static void
-update_frame(int framenum)
+update_frame(int framenum, int level)
 {
     static int init = 0;
     static struct framebuf *frames[2];
@@ -97,22 +107,61 @@ update_frame(int framenum)
     framebuf_render(address);
 }
 
+
 void main(void) {
-    int frame_countdown = 1000;
+    int nexttime = rdcycles_32() + 500;
+    int nextframetime = rdcycles_32() + 1000;
     int framenum = 0;
+    signed int diff;
 
-    // And finally - the main loop.
+    int peak = 0;
+    int audio_abs = 0;
+    int long_average = 0;
+    int audio = 0;
+    int updatecount;
+
+    frames[0] = framebuf_alloc();
+    frames[1] = framebuf_alloc();
+        
+    printf("Hello Raiden\n\r");
+    
     while (1) {
-        if (frame_countdown-- == 0) {
-            frame_countdown = 20000;
-            
-            update_frame(framenum++);
-        }
+        //----------------------------------------------------------------------------------------------
+        // try to get some form of deterministic timing... kinda
+        do { diff = nexttime - rdcycles_32(); } while (diff > 0);
+        nexttime = rdcycles_32() + (CORE_CLOCK_FREQUENCY / 8000);
+        //----------------------------------------------------------------------------------------------
 
-        if (SERIAL->isr & SERIAL_INT_RXDATA_READY) {
-            uint8_t ch = SERIAL->rxfifo;
+        audio_abs = MISC->mic;
+        if (audio_abs < 0) audio_abs = -audio_abs;
+        
+        audio = (audio_abs << 6);
+        if (audio < 0) audio = 0;
+        if (audio > 8000) audio = 8000;
+        
+        if (peak > 1) peak = peak - (peak >> 10) - 1;
+        if (audio > peak) peak = audio;
 
-            _putchar(ch);
+        //----------------------------------------------------------------------------------------------
+        // update the frames at a lower rate
+        diff = nextframetime - rdcycles_32();
+        if (diff < 0) {
+            nextframetime = rdcycles_32() + (CORE_CLOCK_FREQUENCY / 20);
+
+            int level = 0;
+            if      (peak < 1000 ) level = 0;
+            else if (peak < 2000 ) level = 1;
+            else if (peak < 2400 ) level = 2;
+            else if (peak < 2800 ) level = 3;
+            else if (peak < 3000 ) level = 4;
+            else if (peak < 3200 ) level = 5;
+            else if (peak < 3600 ) level = 6;
+            else if (peak < 4200 ) level = 7;
+            else if (peak < 5000 ) level = 8;
+            else                   level = 9;
+
+            printf("%2d %d/%d\n\r", MISC->mic, peak, level);
+            update_frame(framenum++, level);
         }
     }
 }

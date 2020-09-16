@@ -58,7 +58,7 @@ void main(void)
     int long_average = 0;
     //int audio_average = 0;
     int audio = 0;
-    uint32_t nexttime = 0;
+    uint32_t nexttime = rdcycles_32() + 500;
     signed int diff;
 
     printf("Starting Mic Test\n");

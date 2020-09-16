@@ -63,7 +63,7 @@ static inline void check_serial(void) {
 }
 
 void main(void) {
-    int nexttime = 0;
+    int nexttime = rdcycles_32() + 500;
     int framenum = 0;
     signed int diff;
 

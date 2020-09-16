@@ -23,12 +23,12 @@ static void recursive_branch(int x, int y, int max) {
     if (value >= max) return;
     
     if ((x & 1) ^ (y & 1)) {
-        if (x < 19 && depth[x+1][y] > value) { recursive_branch(x+1, y, max); branch = 1; }
-        if (y > 0  && depth[x][y-1] > value) { recursive_branch(x, y-1, max); branch = 1; }
-        if (y < 13 && depth[x][y+1] > value) { recursive_branch(x, y+1, max); branch = 1; }
+        if      (x < 19 && depth[x+1][y] > value) { recursive_branch(x+1, y, max); branch = 1; }
+        else if (y > 0  && depth[x][y-1] > value) { recursive_branch(x, y-1, max); branch = 1; }
+        else if (y < 13 && depth[x][y+1] > value) { recursive_branch(x, y+1, max); branch = 1; }
 
         if (!branch) {
-            for (attempt = 0; attempt < 10; attempt++) {
+            for (attempt = 0; attempt < 8; attempt++) {
                 // no possible directions
                 if (tried == 7) break;
                 
@@ -88,12 +88,12 @@ static void recursive_branch(int x, int y, int max) {
         }
     }
     else {
-        if (x > 0  && depth[x+1][y] > value) { recursive_branch(x+1, y, max); branch = 1; }
-        if (y > 0  && depth[x][y-1] > value) { recursive_branch(x, y-1, max); branch = 1; }
-        if (y < 13 && depth[x][y+1] > value) { recursive_branch(x, y+1, max); branch = 1; }
+        if      (x > 0  && depth[x-1][y] > value) { recursive_branch(x-1, y, max); branch = 1; }
+        else if (y > 0  && depth[x][y-1] > value) { recursive_branch(x, y-1, max); branch = 1; }
+        else if (y < 13 && depth[x][y+1] > value) { recursive_branch(x, y+1, max); branch = 1; }
 
         if (!branch) {
-            for (attempt = 0; attempt < 10; attempt++) {
+            for (attempt = 0; attempt < 8; attempt++) {
                 // no possible directions
                 if (tried == 7) break;
 
@@ -194,12 +194,8 @@ static void update_frame(int framenum, int audio, int max)
     }
 
     // start two lightning bolts
-    //recursive_branch( 9, 8, max);
     recursive_branch( 8, 6, max>>1);
-    //recursive_branch( 9, 7, max>>1);
-    //recursive_branch(10, 8, max);
     recursive_branch(11, 6, max>>1);
-    //recursive_branch(10, 7, max>>1);
 
     // draw the lightning
     for (y = 0; y < 14; y++) {
@@ -256,8 +252,8 @@ static inline void check_serial(void) {
 }
 
 void main(void) {
-    int nexttime = 0;
-    int nextframetime = 0;
+    int nexttime = rdcycles_32() + 500;
+    int nextframetime = rdcycles_32() + 1000;
     int framenum = 0;
     signed int diff;
 
@@ -279,12 +275,12 @@ void main(void) {
         audio_abs = MISC->mic;
         if (audio_abs < 0) audio_abs = -audio_abs;
         
-        long_average = long_average - (long_average>>5) + audio_abs;
+        //long_average = long_average - (long_average>>5) + audio_abs;
         //audio_average = audio_average - (audio_average >> 4) + (audio_abs - (long_average>>8));
-        audio = (audio_abs << 6) - (long_average<<1);
+        audio = (audio_abs << 6);// - (long_average<<1);
         if (audio < 0) audio = 0;
 
-        if (peak > 1) peak-=2;
+        if (peak > 1) peak = peak - (peak >> 8) - 1;
         if (audio > peak) peak = audio;
         if (peak > 8000) peak = 8000;
 
@@ -293,24 +289,22 @@ void main(void) {
         // update the frames at a lower rate
         diff = nextframetime - rdcycles_32();
         if (diff < 0) {
-            nextframetime = rdcycles_32() + (CORE_CLOCK_FREQUENCY / 15);
+            nextframetime = rdcycles_32() + (CORE_CLOCK_FREQUENCY / 20);
 
             int max = 1;
             if      (peak < 1000 ) max = 1;
-            else if (peak < 2000 ) max = 2;
-            else if (peak < 2400 ) max = 3;
-            else if (peak < 2800 ) max = 5;
-            else if (peak < 3000 ) max = 7;
-            else if (peak < 3200 ) max = 10;
-            else if (peak < 3600 ) max = 13;
-            else if (peak < 4200 ) max = 16;
-            else if (peak < 5000 ) max = 20;
+            else if (peak < 2000 ) max = 6;
+            else if (peak < 2400 ) max = 7;
+            else if (peak < 2800 ) max = 9;
+            else if (peak < 3000 ) max = 12;
+            else if (peak < 3200 ) max = 15;
+            else if (peak < 3600 ) max = 17;
+            else if (peak < 4200 ) max = 19;
+            else if (peak < 5000 ) max = 22;
             else                   max = 24;
-            
-            printf("%6d - %d (%d/%d)\n\r", updatecount, framenum, peak, max);
-            updatecount = 0;
+
+            printf("%2d %d/%d\n\r", MISC->mic, peak, max);
             update_frame(framenum++, audio, max);
         }
-        updatecount++;
     }
 }
