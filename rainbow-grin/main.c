@@ -123,8 +123,6 @@ void main(void) {
     frames[0] = framebuf_alloc();
     frames[1] = framebuf_alloc();
         
-    printf("Hello Raiden\n\r");
-    
     while (1) {
         //----------------------------------------------------------------------------------------------
         // try to get some form of deterministic timing... kinda
@@ -160,7 +158,6 @@ void main(void) {
             else if (peak < 5000 ) level = 8;
             else                   level = 9;
 
-            printf("%2d %d/%d\n\r", MISC->mic, peak, level);
             update_frame(framenum++, level);
         }
     }
