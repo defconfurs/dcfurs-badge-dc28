@@ -1,4 +1,4 @@
-<html><head><title>DC Fur Badge Animation Tool v2020-0.3</title>
+<html><head><title>DC Fur Badge Animation Tool v2020-0.4</title>
 <!-- Written by Liquidthex (at) Liquidthex . com -->
 <!-- DEFCON -->
 <style>
@@ -209,22 +209,55 @@ function prevFrame() {
  updateOutput();
 }
 
-function toggle(y, x, val = null) {
+var tbrush = null
+
+function mdown(y, x) {
  if (isPlaying) return;
- if (val) {
-  brush = val;
- }
  if (pixels[y][x] == -1) { return; }
  if (pixels[y][x] == brush) {
+  tbrush = null
   pixels[y][x] = '00';
   document.getElementById('y'+y+'x'+x).style.backgroundColor = '#2a312b01';
  } else {
-  pixels[y][x] = brush;
+  tbrush = pixels[y][x] = brush;
   document.getElementById('y'+y+'x'+x).style.backgroundColor = ct[brush];
  }
  saveFrame();
  updateOutput();
  cpal_update();
+ document.documentElement.addEventListener("mousemove", mmove, true)
+ document.documentElement.addEventListener("mouseup", mup, true)
+}
+
+function mmove(e) {
+ let el = e.target
+ let match
+ while (el != null && match == null) {
+  if (el.id) match = el.id.match(/^y(\d+)x(\d+)$/)
+  el = el.parentNode
+ }
+ e.preventDefault()
+ e.stopPropagation()
+ if (!match) return
+ let y = +match[1], x = +match[2]
+ if (pixels[y][x] == -1) { return; }
+ if (tbrush == null) {
+  pixels[y][x] = '00';
+  document.getElementById('y'+y+'x'+x).style.backgroundColor = '#2a312b01';
+ } else {
+  pixels[y][x] = tbrush;
+  document.getElementById('y'+y+'x'+x).style.backgroundColor = ct[tbrush];
+ }
+ saveFrame();
+ updateOutput();
+ cpal_update();
+}
+
+function mup(e) {
+  document.documentElement.removeEventListener("mousemove", mmove, true)
+  document.documentElement.removeEventListener("mouseup", mup, true)
+  e.preventDefault()
+  e.stopPropagation()
 }
 
 function saveFrame() {
@@ -362,19 +395,6 @@ function loadNewAnimation(str) {
 }
 
 
-
-function updateDisplay() {
- loadedStr = eval(document.getElementById('output').value.replace(/\s/g,''));
- clearDisplay();
- for (xy = 0; xy < loadedStr.length; xy++) {
-   val = 255;
-   if (loadedStr[xy][2] !== void 0) {
-    val = loadedStr[xy][2];
-   }
-   toggle(loadedStr[xy][0], loadedStr[xy][1], val);
- }
- brushSelect(16);
-}
 
 function mover_palette(t) {
  var cid = t.id.substring(8);
@@ -531,7 +551,7 @@ function createGridElements() {
     for (let x = 0; x < 40; ++x) {
       let cell = document.createElement("td")
       cell.setAttribute("id", `y${y}x${x}`)
-      cell.setAttribute("onMouseDown", `toggle(${y}, ${x});`)
+      cell.setAttribute("onMouseDown", `mdown(${y}, ${x});`)
       cell.setAttribute("class", "mycell")
       if (blackListPixels[y][x]) {
         cell.setAttribute("onMouseOver", "document.getElementById('coords').innerHTML='';")
@@ -570,7 +590,7 @@ Load Animation: <input type=file id=uploadAnimationInput>
 </div>
 <div style="position: absolute; top: 800;"><input id=frameText type=text style="width: 750px; background-color: #333; color: white; border: 1px solid #777;"></div>
 <div id=helpText style="position: absolute; top: 850; width: 750px; background-color: #333; color: white; border: 1px solid #555;">
-DC Furs Badge Pixel Art Animation Creator v2020-0.3<br><br>
+DC Furs Badge Pixel Art Animation Creator v2020-0.4<br><br>
 Instructions:<br>
 1. Paint on some pixels.<br>
 2. Click the <strong>Next Frame</strong> button to create a new frame, and paint some changes to the new frame.<br>
