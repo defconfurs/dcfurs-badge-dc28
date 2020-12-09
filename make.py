@@ -13,14 +13,15 @@ srcdir = os.path.dirname(os.path.abspath(__file__))
 ldsfile = os.path.join(srcdir,'animation.lds')
 
 # The list of animations to build.
-animations = ['lineface',
+animations = ['marquee-image',
+              'lineface',
               'djmode',
               'mic-test',
               'matrix',
+              'missingno',
               'northern-lights',
               'lightning-voice',
-              'rainbow-grin',
-              'marquee-image']
+              'rainbow-grin']
 
 # The list of  JSON animations to build.
 jsdir = os.path.join(srcdir, 'json')
