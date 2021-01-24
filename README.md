@@ -17,7 +17,7 @@ of bling.
 
 ### Further Reading
  * Source code for the FPGA and bootloaders are available on [GitHub](https://github.com/defconfurs/dc28-fur-fpga)
- * A beb-based tool for creating JSON animations URL TBD!
+ * A web-based tool for creating JSON animations URL TBD!
 
 Building the Animations
 -----------------------
