@@ -18,6 +18,7 @@ of bling.
 ### Further Reading
  * Source code for the FPGA and bootloaders are available on [GitHub](https://github.com/defconfurs/dc28-fur-fpga)
  * A web-based tool for creating JSON animations URL TBD!
+ * Protect your badge with [a 3D-printable shield](https://github.com/tjhorner/boopblockershield)
 
 Building the Animations
 -----------------------
