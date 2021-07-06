@@ -17,23 +17,23 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: Update package list
-      run: apt update
+      run: sudo apt update
     - name: Install dependencies
       run: |
-          DEBIAN_FRONTEND="noninteractive" apt -y install git build-essential wget python3 python3-pip autoconf automake autotools-dev curl libmpc-dev libmpfr-dev libgmp-dev gawk bison flex texinfo gperf libtool patchutils bc zlib1g-dev libexpat-dev python3-pillow
+          sudo DEBIAN_FRONTEND="noninteractive" apt -y install git build-essential wget python3 python3-pip autoconf automake autotools-dev curl libmpc-dev libmpfr-dev libgmp-dev gawk bison flex texinfo gperf libtool patchutils bc zlib1g-dev libexpat-dev python3-pillow
     - name: Prep and clone compiler
       run: |
-        mkdir /build
-        cd /build
+        mkdir /tmp/build
+        cd /tmp/build
         git clone --depth 2 -j8 https://github.com/riscv/riscv-gnu-toolchain.git riscv-gnu-toolchain
-        cd /build/riscv-gnu-toolchain/
+        cd /tmp/build/riscv-gnu-toolchain/
         sed -i 's/git submodule update/git submodule update --quiet --init --depth=1 --remote/g' Makefile.in
         ./configure --prefix=/opt/riscv --enable-multilib
     - name: Build compiler
-      run: make -j$(nproc) -l
+      run: sudo make -j$(nproc) -l
       
     - name: Clear disk
-      run: rm -rf /build
+      run: rm -rf /tmp/build
       
     - name: Go home
       run: cd $GITHUB_WORKSPACE
