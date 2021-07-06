@@ -1,0 +1,57 @@
+# This workflow will download a docker container which contains python + compiler dependencies, then build the code
+# For more information see: https://help.github.com/actions/language-and-framework-guides/using-python-with-github-actions
+
+name: Build badge files
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  runner-build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Update package list
+      run: apt update
+    - name: Install dependencies
+      run: |
+          DEBIAN_FRONTEND="noninteractive" apt -y install git build-essential wget python3 python3-pip autoconf automake autotools-dev curl libmpc-dev libmpfr-dev libgmp-dev gawk bison flex texinfo gperf libtool patchutils bc zlib1g-dev libexpat-dev python3-pillow
+    - name: Prep and clone compiler
+      run: |
+        mkdir /build
+        cd /build
+        git clone --depth 2 -j8 https://github.com/riscv/riscv-gnu-toolchain.git riscv-gnu-toolchain
+        cd /build/riscv-gnu-toolchain/
+        sed -i 's/git submodule update/git submodule update --quiet --init --depth=1 --remote/g' Makefile.in
+        ./configure --prefix=/opt/riscv --enable-multilib
+    - name: Build compiler
+      run: make -j$(nproc) -l
+      
+  - name: Clear disk
+      run: rm -rf /build
+      
+  - name: Go home
+      run: cd $GITHUB_WORKSPACE
+      
+  - name: make clean
+      run: ./make.py clean
+
+  - name: make
+      run: ./make.py
+
+  docker-build:
+    runs-on: ubuntu-latest
+    container:
+      image: phasenoise/dcfur-badge-28:07062021
+    # do something that mounts the GH runner stuff INTO the docker container
+    steps:
+    - uses: actions/checkout@v2
+    - name: Clean
+      run: ./make.py clean
+    - name: Build
+      run: ./make.py
