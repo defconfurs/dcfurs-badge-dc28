@@ -32,16 +32,16 @@ jobs:
     - name: Build compiler
       run: make -j$(nproc) -l
       
-  - name: Clear disk
+    - name: Clear disk
       run: rm -rf /build
       
-  - name: Go home
+    - name: Go home
       run: cd $GITHUB_WORKSPACE
       
-  - name: make clean
+    - name: make clean
       run: ./make.py clean
 
-  - name: make
+    - name: make
       run: ./make.py
 
   docker-build:
