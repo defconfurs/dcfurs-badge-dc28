@@ -1,0 +1,23 @@
+# This workflow will download a docker container which contains python + compiler dependencies, then build the code
+# For more information see: https://help.github.com/actions/language-and-framework-guides/using-python-with-github-actions
+
+name: Build badge files
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  docker-build:
+    runs-on: ubuntu-latest
+    container:
+      image: phasenoise/dcfur-badge-28:07062021
+    steps:
+    - uses: actions/checkout@v2
+    - name: Clean
+      run: ./make.py clean
+    - name: Build
+      run: ./make.py
